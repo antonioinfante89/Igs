@@ -220,3 +220,12 @@ th {
 .activities-list table {
     min-width: 800px;
 }
+.time-input {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+}
+
+.time-input input {
+    width: 100px;
+}

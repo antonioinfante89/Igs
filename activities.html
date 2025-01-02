@@ -38,20 +38,26 @@
                     <select class="form-control" name="resourceId" required></select>
                 </div>
                 <div class="form-group">
-                    <label>Tempo Previsto (ore)</label>
-                    <input type="number" class="form-control" name="plannedTime" step="0.25" required>
+                    <label>Tempo Previsto</label>
+                    <div class="time-input">
+                        <input type="number" class="form-control" name="plannedHours" min="0" required> ore
+                        <input type="number" class="form-control" name="plannedMinutes" min="0" max="59" required> minuti
+                    </div>
                 </div>
                 <div class="form-group">
-                    <label>Costo Orario Previsto (€)</label>
-                    <input type="number" class="form-control" name="plannedHourlyRate" step="0.01" required>
+                    <label>Costo Tempo Previsto (€)</label>
+                    <input type="number" class="form-control" name="plannedCost" readonly>
                 </div>
                 <div class="form-group">
-                    <label>Tempo Effettivo (ore)</label>
-                    <input type="number" class="form-control" name="actualTime" step="0.25">
+                    <label>Tempo Effettivo</label>
+                    <div class="time-input">
+                        <input type="number" class="form-control" name="actualHours" min="0"> ore
+                        <input type="number" class="form-control" name="actualMinutes" min="0" max="59"> minuti
+                    </div>
                 </div>
                 <div class="form-group">
-                    <label>Costo Orario Effettivo (€)</label>
-                    <input type="number" class="form-control" name="actualHourlyRate" step="0.01">
+                    <label>Costo Tempo Effettivo (€)</label>
+                    <input type="number" class="form-control" name="actualCost" readonly>
                 </div>
                 <button type="submit" class="btn btn-primary">Salva</button>
             </form>
