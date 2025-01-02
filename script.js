@@ -124,7 +124,7 @@ projectForm.addEventListener('submit', function(e) {
         cost: this.querySelector('[name="hourlyRate"]').value
     };
     console.log('Form data:', formData);
-    
+
     const projectId = this.querySelector('[name="projectId"]').value;
     const name = this.querySelector('[name="projectName"]').value;
     const resourceId = parseInt(this.querySelector('[name="projectResource"]').value);
