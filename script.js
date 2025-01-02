@@ -7,6 +7,12 @@ function saveToLocalStorage() {
     updateUI();
 }
 
+function calculateHourlyRate(monthlyPay, workingDays, hoursPerDay) {
+    const annualPay = monthlyPay * 12;
+    const annualHours = workingDays * hoursPerDay;
+    return annualPay / annualHours;
+}
+
 function calculateMarkup(baseCost, markups) {
     let total = baseCost;
     if (markups.markup1) total *= 1.20; // 20% costo orario
@@ -22,21 +28,34 @@ const resourceForm = document.getElementById('resourceForm');
 const resourceSubmitBtn = document.getElementById('resourceSubmitBtn');
 const resourceCancelBtn = document.getElementById('resourceCancelBtn');
 
+['monthlyPay', 'workingDays', 'hoursPerDay'].forEach(field => {
+    resourceForm[field].addEventListener('input', () => {
+        const monthlyPay = parseFloat(resourceForm.monthlyPay.value) || 0;
+        const workingDays = parseFloat(resourceForm.workingDays.value) || 0;
+        const hoursPerDay = parseFloat(resourceForm.hoursPerDay.value) || 0;
+        
+        if (monthlyPay && workingDays && hoursPerDay) {
+            resourceForm.hourlyRate.value = calculateHourlyRate(monthlyPay, workingDays, hoursPerDay).toFixed(2);
+        }
+    });
+});
+
 resourceForm.addEventListener('submit', function(e) {
     e.preventDefault();
-    const resourceId = this.resourceId.value;
-    const name = this.resourceName.value;
-    const cost = parseFloat(this.resourceCost.value);
+    
+    const resource = {
+        id: this.resourceId.value ? parseInt(this.resourceId.value) : Date.now(),
+        name: this.resourceName.value,
+        monthlyPay: parseFloat(this.monthlyPay.value),
+        workingDays: parseFloat(this.workingDays.value),
+        hoursPerDay: parseFloat(this.hoursPerDay.value),
+        cost: parseFloat(this.hourlyRate.value)
+    };
 
-    if (resourceId) {
-        // Modifica
-        const index = resources.findIndex(r => r.id === parseInt(resourceId));
-        if (index !== -1) {
-            resources[index] = { ...resources[index], name, cost };
-        }
+    if (this.resourceId.value) {
+        resources = resources.map(r => r.id === resource.id ? resource : r);
     } else {
-        // Nuovo
-        resources.push({ id: Date.now(), name, cost });
+        resources.push(resource);
     }
 
     saveToLocalStorage();
@@ -57,7 +76,10 @@ function editResource(id) {
     if (resource) {
         resourceForm.resourceId.value = resource.id;
         resourceForm.resourceName.value = resource.name;
-        resourceForm.resourceCost.value = resource.cost;
+        resourceForm.monthlyPay.value = resource.monthlyPay;
+        resourceForm.workingDays.value = resource.workingDays;
+        resourceForm.hoursPerDay.value = resource.hoursPerDay;
+        resourceForm.hourlyRate.value = resource.cost;
         resourceSubmitBtn.textContent = 'Modifica Risorsa';
         resourceCancelBtn.style.display = 'inline-block';
     }
@@ -100,31 +122,20 @@ projectForm.addEventListener('submit', function(e) {
     const baseCost = resource.cost * time;
     const budget = calculateMarkup(baseCost, markups);
 
+    const project = {
+        id: projectId ? parseInt(projectId) : Date.now(),
+        name,
+        resourceId,
+        time,
+        budget,
+        markups,
+        hourlyRate: budget / time
+    };
+
     if (projectId) {
-        // Modifica
-        const index = projects.findIndex(p => p.id === parseInt(projectId));
-        if (index !== -1) {
-            projects[index] = {
-                ...projects[index],
-                name,
-                resourceId,
-                time,
-                budget,
-                markups,
-                hourlyRate: budget / time
-            };
-        }
+        projects = projects.map(p => p.id === project.id ? project : p);
     } else {
-        // Nuovo
-        projects.push({
-            id: Date.now(),
-            name,
-            resourceId,
-            time,
-            budget,
-            markups,
-            hourlyRate: budget / time
-        });
+        projects.push(project);
     }
 
     saveToLocalStorage();
@@ -138,6 +149,7 @@ function resetProjectForm() {
     projectForm.projectId.value = '';
     projectSubmitBtn.textContent = 'Aggiungi Progetto';
     projectCancelBtn.style.display = 'none';
+    projectForm.markup1.checked = true;
 }
 
 function editProject(id) {
@@ -175,6 +187,9 @@ function updateUI() {
     resourceTableBody.innerHTML = resources.map(resource => `
         <tr>
             <td>${resource.name}</td>
+            <td>${resource.monthlyPay.toFixed(2)} €</td>
+            <td>${resource.workingDays}</td>
+            <td>${resource.hoursPerDay}</td>
             <td>${resource.cost.toFixed(2)} €/h</td>
             <td>
                 <button onclick="editResource(${resource.id})" class="btn btn-primary">Modifica</button>
