@@ -1,0 +1,31 @@
+.nav {
+    background-color: #026aa7;
+    padding: 1rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.nav-list {
+    display: flex;
+    list-style: none;
+    gap: 2rem;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.nav-item a {
+    color: white;
+    text-decoration: none;
+    font-weight: 500;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    transition: background-color 0.2s;
+}
+
+.nav-item a:hover {
+    background-color: rgba(255,255,255,0.1);
+}
+
+.nav-item.active a {
+    background-color: rgba(255,255,255,0.2);
+}

@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestione Progetti IGS</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="nav.css">
+</head>
+<body>
+    <nav class="nav">
+        <ul class="nav-list">
+            <li class="nav-item"><a href="index.html">Home</a></li>
+            <li class="nav-item"><a href="activities.html">Attività</a></li>
+        </ul>
+    </nav>
+
+    <div class="container">
+        <div class="header">
+            <h1>Gestione Progetti IGS</h1>
+        </div>
+
+        <!-- Sezione Risorse -->
+        <div class="section">
+            <h2>Gestione Risorse</h2>
+            <form id="resourceForm">
+                <input type="hidden" name="resourceId">
+                <div class="form-group">
+                    <label>Nome Risorsa</label>
+                    <input type="text" class="form-control" name="resourceName" required>
+                </div>
+                <div class="form-group">
+                    <label>Costo Orario (€)</label>
+                    <input type="number" class="form-control" name="resourceCost" step="0.01" required>
+                </div>
+                <button type="submit" class="btn btn-primary" id="resourceSubmitBtn">Aggiungi Risorsa</button>
+                <button type="button" class="btn btn-secondary" id="resourceCancelBtn" style="display: none;">Annulla</button>
+            </form>
+            <table id="resourceTable">
+                <thead>
+                    <tr>
+                        <th>Nome</th>
+                        <th>Costo Orario</th>
+                        <th>Azioni</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+
+        <!-- Sezione Progetti -->
+        <div class="section">
+            <h2>Gestione Progetti</h2>
+            <form id="projectForm">
+                <input type="hidden" name="projectId">
+                <div class="form-group">
+                    <label>Nome Progetto</label>
+                    <input type="text" class="form-control" name="projectName" required>
+                </div>
+                <div class="form-group">
+                    <label>Risorsa</label>
+                    <select class="form-control" name="projectResource" required></select>
+                </div>
+                <div class="form-group">
+                    <label>Tempo (ore)</label>
+                    <input type="number" class="form-control" name="projectTime" step="0.25" required>
+                </div>
+                <div class="checkbox-group">
+                    <label>
+                        <input type="checkbox" name="markup1" checked> 20% Costo orario risorsa
+                    </label>
+                    <label>
+                        <input type="checkbox" name="markup2"> 5% Bonus risorsa
+                    </label>
+                    <label>
+                        <input type="checkbox" name="markup3"> 25% Costo struttura
+                    </label>
+                    <label>
+                        <input type="checkbox" name="markup4"> 25% Utile
+                    </label>
+                    <label>
+                        <input type="checkbox" name="markup5"> 25% Costo IGS
+                    </label>
+                </div>
+                <button type="submit" class="btn btn-primary" id="projectSubmitBtn">Aggiungi Progetto</button>
+                <button type="button" class="btn btn-secondary" id="projectCancelBtn" style="display: none;">Annulla</button>
+            </form>
+            <table id="projectTable">
+                <thead>
+                    <tr>
+                        <th>Nome</th>
+                        <th>Risorsa</th>
+                        <th>Tempo</th>
+                        <th>Budget</th>
+                        <th>Azioni</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
