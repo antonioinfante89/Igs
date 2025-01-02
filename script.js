@@ -15,11 +15,11 @@ function calculateHourlyRate(monthlyPay, workingDays, hoursPerDay) {
 
 function calculateMarkup(baseCost, markups) {
     let total = baseCost;
-    if (markups.markup1) total *= 1.20; // 20% costo orario
-    if (markups.markup2) total *= 1.05; // 5% bonus
-    if (markups.markup3) total *= 1.25; // 25% struttura
-    if (markups.markup4) total *= 1.25; // 25% utile
-    if (markups.markup5) total *= 1.25; // 25% IGS
+    if (markups.markup1) total *= 1.20;
+    if (markups.markup2) total *= 1.05;
+    if (markups.markup3) total *= 1.25;
+    if (markups.markup4) total *= 1.25;
+    if (markups.markup5) total *= 1.25;
     return total;
 }
 
@@ -29,13 +29,15 @@ const resourceSubmitBtn = document.getElementById('resourceSubmitBtn');
 const resourceCancelBtn = document.getElementById('resourceCancelBtn');
 
 ['monthlyPay', 'workingDays', 'hoursPerDay'].forEach(field => {
-    resourceForm[field].addEventListener('input', () => {
-        const monthlyPay = parseFloat(resourceForm.monthlyPay.value) || 0;
-        const workingDays = parseFloat(resourceForm.workingDays.value) || 0;
-        const hoursPerDay = parseFloat(resourceForm.hoursPerDay.value) || 0;
+    const input = resourceForm.querySelector(`[name="${field}"]`);
+    input.addEventListener('input', () => {
+        const monthlyPay = parseFloat(resourceForm.querySelector('[name="monthlyPay"]').value) || 0;
+        const workingDays = parseFloat(resourceForm.querySelector('[name="workingDays"]').value) || 0;
+        const hoursPerDay = parseFloat(resourceForm.querySelector('[name="hoursPerDay"]').value) || 0;
         
         if (monthlyPay && workingDays && hoursPerDay) {
-            resourceForm.hourlyRate.value = calculateHourlyRate(monthlyPay, workingDays, hoursPerDay).toFixed(2);
+            const hourlyRate = calculateHourlyRate(monthlyPay, workingDays, hoursPerDay);
+            resourceForm.querySelector('[name="hourlyRate"]').value = hourlyRate.toFixed(2);
         }
     });
 });
@@ -43,16 +45,23 @@ const resourceCancelBtn = document.getElementById('resourceCancelBtn');
 resourceForm.addEventListener('submit', function(e) {
     e.preventDefault();
     
+    const resourceId = this.querySelector('[name="resourceId"]').value;
+    const name = this.querySelector('[name="resourceName"]').value;
+    const monthlyPay = parseFloat(this.querySelector('[name="monthlyPay"]').value);
+    const workingDays = parseFloat(this.querySelector('[name="workingDays"]').value);
+    const hoursPerDay = parseFloat(this.querySelector('[name="hoursPerDay"]').value);
+    const cost = parseFloat(this.querySelector('[name="hourlyRate"]').value);
+
     const resource = {
-        id: this.resourceId.value ? parseInt(this.resourceId.value) : Date.now(),
-        name: this.resourceName.value,
-        monthlyPay: parseFloat(this.monthlyPay.value),
-        workingDays: parseFloat(this.workingDays.value),
-        hoursPerDay: parseFloat(this.hoursPerDay.value),
-        cost: parseFloat(this.hourlyRate.value)
+        id: resourceId ? parseInt(resourceId) : Date.now(),
+        name,
+        monthlyPay,
+        workingDays,
+        hoursPerDay,
+        cost
     };
 
-    if (this.resourceId.value) {
+    if (resourceId) {
         resources = resources.map(r => r.id === resource.id ? resource : r);
     } else {
         resources.push(resource);
@@ -66,7 +75,7 @@ resourceCancelBtn.addEventListener('click', resetResourceForm);
 
 function resetResourceForm() {
     resourceForm.reset();
-    resourceForm.resourceId.value = '';
+    resourceForm.querySelector('[name="resourceId"]').value = '';
     resourceSubmitBtn.textContent = 'Aggiungi Risorsa';
     resourceCancelBtn.style.display = 'none';
 }
@@ -74,12 +83,12 @@ function resetResourceForm() {
 function editResource(id) {
     const resource = resources.find(r => r.id === id);
     if (resource) {
-        resourceForm.resourceId.value = resource.id;
-        resourceForm.resourceName.value = resource.name;
-        resourceForm.monthlyPay.value = resource.monthlyPay;
-        resourceForm.workingDays.value = resource.workingDays;
-        resourceForm.hoursPerDay.value = resource.hoursPerDay;
-        resourceForm.hourlyRate.value = resource.cost;
+        resourceForm.querySelector('[name="resourceId"]').value = resource.id;
+        resourceForm.querySelector('[name="resourceName"]').value = resource.name;
+        resourceForm.querySelector('[name="monthlyPay"]').value = resource.monthlyPay;
+        resourceForm.querySelector('[name="workingDays"]').value = resource.workingDays;
+        resourceForm.querySelector('[name="hoursPerDay"]').value = resource.hoursPerDay;
+        resourceForm.querySelector('[name="hourlyRate"]').value = resource.cost;
         resourceSubmitBtn.textContent = 'Modifica Risorsa';
         resourceCancelBtn.style.display = 'inline-block';
     }
@@ -105,17 +114,28 @@ const projectCancelBtn = document.getElementById('projectCancelBtn');
 
 projectForm.addEventListener('submit', function(e) {
     e.preventDefault();
-    const projectId = this.projectId.value;
-    const name = this.projectName.value;
-    const resourceId = parseInt(this.projectResource.value);
-    const time = parseFloat(this.projectTime.value);
+    console.log('Form submitted');
+    const formData = {
+        resourceId: this.querySelector('[name="resourceId"]').value,
+        name: this.querySelector('[name="resourceName"]').value,
+        monthlyPay: this.querySelector('[name="monthlyPay"]').value,
+        workingDays: this.querySelector('[name="workingDays"]').value,
+        hoursPerDay: this.querySelector('[name="hoursPerDay"]').value,
+        cost: this.querySelector('[name="hourlyRate"]').value
+    };
+    console.log('Form data:', formData);
+    
+    const projectId = this.querySelector('[name="projectId"]').value;
+    const name = this.querySelector('[name="projectName"]').value;
+    const resourceId = parseInt(this.querySelector('[name="projectResource"]').value);
+    const time = parseFloat(this.querySelector('[name="projectTime"]').value);
     
     const markups = {
-        markup1: this.markup1.checked,
-        markup2: this.markup2.checked,
-        markup3: this.markup3.checked,
-        markup4: this.markup4.checked,
-        markup5: this.markup5.checked
+        markup1: this.querySelector('[name="markup1"]').checked,
+        markup2: this.querySelector('[name="markup2"]').checked,
+        markup3: this.querySelector('[name="markup3"]').checked,
+        markup4: this.querySelector('[name="markup4"]').checked,
+        markup5: this.querySelector('[name="markup5"]').checked
     };
 
     const resource = resources.find(r => r.id === resourceId);
@@ -146,24 +166,24 @@ projectCancelBtn.addEventListener('click', resetProjectForm);
 
 function resetProjectForm() {
     projectForm.reset();
-    projectForm.projectId.value = '';
+    projectForm.querySelector('[name="projectId"]').value = '';
     projectSubmitBtn.textContent = 'Aggiungi Progetto';
     projectCancelBtn.style.display = 'none';
-    projectForm.markup1.checked = true;
+    projectForm.querySelector('[name="markup1"]').checked = true;
 }
 
 function editProject(id) {
     const project = projects.find(p => p.id === id);
     if (project) {
-        projectForm.projectId.value = project.id;
-        projectForm.projectName.value = project.name;
-        projectForm.projectResource.value = project.resourceId;
-        projectForm.projectTime.value = project.time;
-        projectForm.markup1.checked = project.markups.markup1;
-        projectForm.markup2.checked = project.markups.markup2;
-        projectForm.markup3.checked = project.markups.markup3;
-        projectForm.markup4.checked = project.markups.markup4;
-        projectForm.markup5.checked = project.markups.markup5;
+        projectForm.querySelector('[name="projectId"]').value = project.id;
+        projectForm.querySelector('[name="projectName"]').value = project.name;
+        projectForm.querySelector('[name="projectResource"]').value = project.resourceId;
+        projectForm.querySelector('[name="projectTime"]').value = project.time;
+        projectForm.querySelector('[name="markup1"]').checked = project.markups.markup1;
+        projectForm.querySelector('[name="markup2"]').checked = project.markups.markup2;
+        projectForm.querySelector('[name="markup3"]').checked = project.markups.markup3;
+        projectForm.querySelector('[name="markup4"]').checked = project.markups.markup4;
+        projectForm.querySelector('[name="markup5"]').checked = project.markups.markup5;
         projectSubmitBtn.textContent = 'Modifica Progetto';
         projectCancelBtn.style.display = 'inline-block';
     }
@@ -172,7 +192,6 @@ function editProject(id) {
 function deleteProject(id) {
     if (confirm('Sei sicuro di voler eliminare questo progetto? Tutte le attività associate verranno eliminate.')) {
         projects = projects.filter(p => p.id !== id);
-        // Rimuovi anche le attività associate
         const activities = JSON.parse(localStorage.getItem('activities')) || [];
         const updatedActivities = activities.filter(a => a.projectId !== id);
         localStorage.setItem('activities', JSON.stringify(updatedActivities));
@@ -180,9 +199,7 @@ function deleteProject(id) {
     }
 }
 
-// Aggiornamento UI
 function updateUI() {
-    // Aggiorna tabella risorse
     const resourceTableBody = document.querySelector('#resourceTable tbody');
     resourceTableBody.innerHTML = resources.map(resource => `
         <tr>
@@ -198,7 +215,6 @@ function updateUI() {
         </tr>
     `).join('');
 
-    // Aggiorna tabella progetti
     const projectTableBody = document.querySelector('#projectTable tbody');
     projectTableBody.innerHTML = projects.map(project => {
         const resource = resources.find(r => r.id === project.resourceId);
@@ -216,17 +232,14 @@ function updateUI() {
         `;
     }).join('');
 
-    // Aggiorna select nei form
     const projectResourceSelect = document.querySelector('[name="projectResource"]');
     projectResourceSelect.innerHTML = resources.map(resource =>
         `<option value="${resource.id}">${resource.name}</option>`
     ).join('');
 }
 
-// Inizializzazione UI
 updateUI();
 
-// Esponi funzioni globali
 window.editResource = editResource;
 window.deleteResource = deleteResource;
 window.editProject = editProject;
