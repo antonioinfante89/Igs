@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestione Risorse - IGS</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="nav.css">
+</head>
+<body>
+    <nav class="nav">
+        <ul class="nav-list">
+            <li class="nav-item"><a href="index.html">Home</a></li>
+            <li class="nav-item"><a href="resources.html">Risorse</a></li>
+            <li class="nav-item"><a href="clients.html">Clienti</a></li>
+            <li class="nav-item"><a href="activities.html">Attività</a></li>
+        </ul>
+    </nav>
+
+    <div class="container">
+        <div class="header">
+            <h1>Gestione Risorse</h1>
+        </div>
+
+        <div class="dashboard-grid">
+            <!-- Card Nuova Risorsa -->
+            <div class="card">
+                <div class="card-header">
+                    <h2>Nuova Risorsa</h2>
+                </div>
+                <div class="card-body">
+                    <form id="resourceForm" class="compact-form">
+                        <input type="hidden" name="resourceId">
+                        <div class="form-group">
+                            <label>Nome Risorsa</label>
+                            <input type="text" class="form-control" name="resourceName" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Compenso Mensile (€)</label>
+                            <input type="number" class="form-control" name="monthlyPay" step="0.01" required>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Giorni Lavorativi/Anno</label>
+                                <input type="number" class="form-control" name="workingDays" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Ore Lavoro/Giorno</label>
+                                <input type="number" class="form-control" name="hoursPerDay" step="0.5" required>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Costo Orario Calcolato (€)</label>
+                            <input type="number" class="form-control highlight" name="hourlyRate" readonly>
+                        </div>
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary" id="resourceSubmitBtn">Aggiungi Risorsa</button>
+                            <button type="button" class="btn btn-secondary" id="resourceCancelBtn" style="display: none;">Annulla</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Card Lista Risorse -->
+            <div class="card">
+                <div class="card-header">
+                    <h2>Risorse Disponibili</h2>
+                </div>
+                <div class="card-body">
+                    <div class="resources-grid" id="resourcesList">
+                        <!-- Risorse popolate dinamicamente -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="resources.js"></script>
+</body>
+</html>
