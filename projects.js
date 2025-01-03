@@ -160,7 +160,12 @@ class ProjectManager {
     }
 
     renderResourcesChart() {
-        const ctx = document.getElementById('resourcesChart').getContext('2d');
+        const ctx = document.getElementById('resourcesChart');
+        if (!ctx) return;
+    
+        if (window.resourcesChart && typeof window.resourcesChart.destroy === 'function') {
+            window.resourcesChart.destroy();
+        }
         const resourcesData = this.resources.map(resource => {
             const totalHours = resource.workingDays * resource.hoursPerDay;
             const allocatedHours = this.projects.reduce((sum, project) => {
@@ -217,8 +222,17 @@ class ProjectManager {
         e.preventDefault();
         const form = e.target;
         
-        const clientId = parseInt(form.querySelector('[name="clientId"]').value);
-        const availableBudget = this.getClientAvailableBudget(clientId);
+        const clientSelect = form.querySelector('#clientSelect');
+        if (!clientSelect) {
+            console.error('Client select not found');
+            return;
+        }
+    
+        const clientId = parseInt(clientSelect.value);
+        if (!clientId) {
+            alert('Seleziona un cliente');
+            return;
+        }
         
         const resourceInputs = document.querySelectorAll('.resource-hours');
         const projectResources = Array.from(resourceInputs)
