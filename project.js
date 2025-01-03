@@ -206,6 +206,49 @@ document.addEventListener('DOMContentLoaded', () => {
         localStorage.setItem('projects', JSON.stringify(projects));
         updateProjectsList();
     }
+    function renderResourcesChart() {
+        const ctx = document.getElementById('resourcesChart').getContext('2d');
+        const resourcesData = resources.map(resource => {
+            const totalHours = resource.workingDays * resource.hoursPerDay;
+            const allocatedHours = projects.reduce((sum, project) => {
+                const allocation = project.resources.find(r => r.id === resource.id);
+                return sum + (allocation ? allocation.hours : 0);
+            }, 0);
+    
+            return {
+                name: resource.name,
+                totalHours,
+                allocatedHours,
+                availableHours: totalHours - allocatedHours
+            };
+        });
+    
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: resourcesData.map(r => r.name),
+                datasets: [
+                    {
+                        label: 'Ore Allocate',
+                        data: resourcesData.map(r => r.allocatedHours),
+                        backgroundColor: 'rgba(54, 162, 235, 0.8)'
+                    },
+                    {
+                        label: 'Ore Disponibili',
+                        data: resourcesData.map(r => r.availableHours),
+                        backgroundColor: 'rgba(75, 192, 192, 0.8)'
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    x: { stacked: true },
+                    y: { stacked: true }
+                }
+            }
+        });
+    }
 
     // Event Listeners
     clientSelect.addEventListener('change', () => {
