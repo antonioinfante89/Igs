@@ -345,3 +345,57 @@ th {
     border-radius: 2px;
     transition: width 0.3s ease;
 }
+.resources-checkboxes {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1rem;
+    margin: 1rem 0;
+    padding: 1rem;
+    background: #f8f9fa;
+    border-radius: 4px;
+}
+
+.resource-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.budget-breakdown {
+    margin-top: 2rem;
+    padding: 1.5rem;
+    background: #f8f9fa;
+    border-radius: 8px;
+}
+
+.budget-grid {
+    display: grid;
+    gap: 1.5rem;
+    margin-top: 1rem;
+}
+
+.budget-item {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 4px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.resource-calculations {
+    margin-top: 1rem;
+}
+
+.resource-calculation-item {
+    margin-bottom: 1rem;
+    padding: 1rem;
+    background: #fff;
+    border-radius: 4px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+
+.client-card {
+    background: white;
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+}

@@ -1,69 +1,115 @@
 document.addEventListener('DOMContentLoaded', () => {
     let clients = JSON.parse(localStorage.getItem('clients')) || [];
-    let projects = JSON.parse(localStorage.getItem('projects')) || [];
     let resources = JSON.parse(localStorage.getItem('resources')) || [];
-    let activities = JSON.parse(localStorage.getItem('activities')) || [];
-
+    
     const clientForm = document.getElementById('clientForm');
     const clientSubmitBtn = document.getElementById('clientSubmitBtn');
     const clientCancelBtn = document.getElementById('clientCancelBtn');
-
-    function calculateBudget(hours) {
-        // Il costo delle risorse è il 20% del budget totale
-        const resourceCost = hours * calculateAverageResourceRate();
-        const totalBudget = resourceCost * 5; // Moltiplichiamo per 5 per ottenere il 100%
-        
+    
+    function calculateBudgetBreakdown(totalBudget) {
+        const resourceBudget = totalBudget * 0.20; // 20% del budget totale
         return {
-            resourceCost: resourceCost,
-            bonusCost: totalBudget * 0.05,
-            profitCost: totalBudget * 0.25,
-            structureCost: totalBudget * 0.25,
-            igsCost: totalBudget * 0.25,
-            totalBudget: totalBudget
+            resourceBudget,
+            bonusBudget: totalBudget * 0.05,  // 5%
+            profitBudget: totalBudget * 0.25, // 25%
+            structureBudget: totalBudget * 0.25, // 25%
+            igsBudget: totalBudget * 0.25     // 25%
         };
     }
 
-    function calculateAverageResourceRate() {
-        if (resources.length === 0) return 0;
-        const totalRate = resources.reduce((sum, r) => sum + r.cost, 0);
-        return totalRate / resources.length;
+    function calculateResourceHours(resourceBudget, hourlyRate) {
+        return Math.floor(resourceBudget / hourlyRate);
     }
 
-    function updateBudgetBreakdown() {
-        const hours = parseFloat(clientForm.querySelector('[name="totalHours"]').value) || 0;
-        const budget = calculateBudget(hours);
+    function updateResourcesSelection() {
+        const resourcesSelection = document.getElementById('resourcesSelection');
+        resourcesSelection.innerHTML = resources.map(resource => `
+            <div class="resource-checkbox">
+                <input type="checkbox" name="selectedResources" value="${resource.id}" 
+                       data-hourly-rate="${resource.cost}">
+                <label>${resource.name} (${resource.cost.toFixed(2)} €/h)</label>
+            </div>
+        `).join('');
+
+        // Aggiungi event listener per i checkbox
+        const checkboxes = document.querySelectorAll('input[name="selectedResources"]');
+        checkboxes.forEach(checkbox => {
+            checkbox.addEventListener('change', updateBudgetCalculations);
+        });
+    }
+
+    function updateBudgetCalculations() {
+        const totalBudget = parseFloat(clientForm.querySelector('[name="totalBudget"]').value) || 0;
+        const breakdown = calculateBudgetBreakdown(totalBudget);
         
-        clientForm.querySelector('[name="hourlyRate"]').value = (budget.totalBudget / hours).toFixed(2);
-        clientForm.querySelector('[name="resourceCost"]').value = budget.resourceCost.toFixed(2) + ' €';
-        clientForm.querySelector('[name="bonusCost"]').value = budget.bonusCost.toFixed(2) + ' €';
-        clientForm.querySelector('[name="profitCost"]').value = budget.profitCost.toFixed(2) + ' €';
-        clientForm.querySelector('[name="structureCost"]').value = budget.structureCost.toFixed(2) + ' €';
-        clientForm.querySelector('[name="igsCost"]').value = budget.igsCost.toFixed(2) + ' €';
-        clientForm.querySelector('[name="totalBudget"]').value = budget.totalBudget.toFixed(2) + ' €';
+        // Aggiorna visualizzazione budget risorse disponibile
+        document.getElementById('resourceBudgetAvailable').textContent = 
+            breakdown.resourceBudget.toFixed(2) + ' €';
+
+        // Aggiorna calcoli per ogni risorsa selezionata
+        const resourceCalculations = document.getElementById('resourceCalculations');
+        const selectedResources = document.querySelectorAll('input[name="selectedResources"]:checked');
+        
+        if (selectedResources.length > 0) {
+            const resourceBudgetPerResource = breakdown.resourceBudget / selectedResources.length;
+            
+            resourceCalculations.innerHTML = Array.from(selectedResources).map(checkbox => {
+                const resource = resources.find(r => r.id === parseInt(checkbox.value));
+                const hours = calculateResourceHours(resourceBudgetPerResource, resource.cost);
+                return `
+                    <div class="resource-calculation-item">
+                        <strong>${resource.name}:</strong>
+                        <div>Budget: ${resourceBudgetPerResource.toFixed(2)} €</div>
+                        <div>Ore disponibili: ${hours}h</div>
+                    </div>
+                `;
+            }).join('');
+        } else {
+            resourceCalculations.innerHTML = '<p>Seleziona almeno una risorsa</p>';
+        }
+
+        // Aggiorna altri campi del budget
+        clientForm.querySelector('[name="bonusBudget"]').value = breakdown.bonusBudget.toFixed(2) + ' €';
+        clientForm.querySelector('[name="profitBudget"]').value = breakdown.profitBudget.toFixed(2) + ' €';
+        clientForm.querySelector('[name="structureBudget"]').value = breakdown.structureBudget.toFixed(2) + ' €';
+        clientForm.querySelector('[name="igsBudget"]').value = breakdown.igsBudget.toFixed(2) + ' €';
     }
 
-    clientForm.querySelector('[name="totalHours"]').addEventListener('input', updateBudgetBreakdown);
+    // Event Listeners
+    clientForm.querySelector('[name="totalBudget"]').addEventListener('input', updateBudgetCalculations);
 
     clientForm.addEventListener('submit', function(e) {
         e.preventDefault();
         
         const clientId = this.querySelector('[name="clientId"]').value;
         const name = this.querySelector('[name="clientName"]').value;
-        const totalHours = parseFloat(this.querySelector('[name="totalHours"]').value);
-        const budget = calculateBudget(totalHours);
+        const totalBudget = parseFloat(this.querySelector('[name="totalBudget"]').value);
+        
+        const selectedResources = Array.from(document.querySelectorAll('input[name="selectedResources"]:checked'))
+            .map(checkbox => {
+                const resource = resources.find(r => r.id === parseInt(checkbox.value));
+                const breakdown = calculateBudgetBreakdown(totalBudget);
+                const resourceBudget = breakdown.resourceBudget / document.querySelectorAll('input[name="selectedResources"]:checked').length;
+                return {
+                    id: resource.id,
+                    name: resource.name,
+                    hourlyRate: resource.cost,
+                    budget: resourceBudget,
+                    hours: calculateResourceHours(resourceBudget, resource.cost)
+                };
+            });
+
+        if (selectedResources.length === 0) {
+            alert('Seleziona almeno una risorsa');
+            return;
+        }
 
         const client = {
             id: clientId ? parseInt(clientId) : Date.now(),
             name,
-            totalHours,
-            budget: budget.totalBudget,
-            breakdown: {
-                resourceCost: budget.resourceCost,
-                bonusCost: budget.bonusCost,
-                profitCost: budget.profitCost,
-                structureCost: budget.structureCost,
-                igsCost: budget.igsCost
-            }
+            totalBudget,
+            resources: selectedResources,
+            breakdown: calculateBudgetBreakdown(totalBudget)
         };
 
         if (clientId) {
@@ -82,9 +128,10 @@ document.addEventListener('DOMContentLoaded', () => {
     function resetForm() {
         clientForm.reset();
         clientForm.querySelector('[name="clientId"]').value = '';
+        document.getElementById('resourceCalculations').innerHTML = '';
         clientSubmitBtn.textContent = 'Aggiungi Cliente';
         clientCancelBtn.style.display = 'none';
-        updateBudgetBreakdown();
+        updateBudgetCalculations();
     }
 
     function editClient(id) {
@@ -92,104 +139,63 @@ document.addEventListener('DOMContentLoaded', () => {
         if (client) {
             clientForm.querySelector('[name="clientId"]').value = client.id;
             clientForm.querySelector('[name="clientName"]').value = client.name;
-            clientForm.querySelector('[name="totalHours"]').value = client.totalHours;
-            updateBudgetBreakdown();
+            clientForm.querySelector('[name="totalBudget"]').value = client.totalBudget;
+            
+            // Seleziona le risorse del cliente
+            document.querySelectorAll('input[name="selectedResources"]').forEach(checkbox => {
+                checkbox.checked = client.resources.some(r => r.id === parseInt(checkbox.value));
+            });
+
+            updateBudgetCalculations();
             clientSubmitBtn.textContent = 'Modifica Cliente';
             clientCancelBtn.style.display = 'inline-block';
         }
     }
 
     function deleteClient(id) {
-        if (confirm('Sei sicuro di voler eliminare questo cliente e tutti i progetti associati?')) {
+        if (confirm('Sei sicuro di voler eliminare questo cliente?')) {
             clients = clients.filter(c => c.id !== id);
-            // Rimuovi anche i progetti associati
-            const clientProjects = projects.filter(p => p.clientId === id);
-            projects = projects.filter(p => p.clientId !== id);
-            // Rimuovi le attività dei progetti eliminati
-            activities = activities.filter(a => !clientProjects.some(p => p.id === a.projectId));
-            
             localStorage.setItem('clients', JSON.stringify(clients));
-            localStorage.setItem('projects', JSON.stringify(projects));
-            localStorage.setItem('activities', JSON.stringify(activities));
             updateUI();
         }
     }
 
-    function getClientStats(clientId) {
-        const clientProjects = projects.filter(p => p.clientId === clientId);
-        const totalBudget = clientProjects.reduce((sum, p) => sum + p.budget, 0);
-        const totalTime = clientProjects.reduce((sum, p) => sum + p.time, 0);
-        const projectActivities = activities.filter(a => 
-            clientProjects.some(p => p.id === a.projectId)
-        );
-        const usedBudget = projectActivities.reduce((sum, a) => sum + a.actualCost, 0);
-        
-        return {
-            projectCount: clientProjects.length,
-            totalBudget,
-            usedBudget,
-            totalTime,
-            completionPercentage: totalBudget ? (usedBudget / totalBudget) * 100 : 0
-        };
-    }
-
     function updateUI() {
         const clientsList = document.getElementById('clientsList');
-        clientsList.innerHTML = clients.map(client => {
-            const stats = getClientStats(client.id);
-            const clientProjects = projects.filter(p => p.clientId === client.id);
-            
-            return `
-                <div class="client-card">
-                    <div class="client-header">
-                        <h3>${client.name}</h3>
-                        <div class="client-actions">
-                            <button onclick="editClient(${client.id})" class="btn btn-primary btn-sm">Modifica</button>
-                            <button onclick="deleteClient(${client.id})" class="btn btn-danger btn-sm">Elimina</button>
-                        </div>
-                    </div>
-                    <div class="client-stats">
-                        <div class="client-stat-item">
-                            Budget Totale: <span>${client.budget.toFixed(2)} €</span>
-                        </div>
-                        <div class="client-stat-item">
-                            Ore Totali: <span>${client.totalHours}h</span>
-                        </div>
-                        <div class="client-stat-item">
-                            Progetti: <span>${stats.projectCount}</span>
-                        </div>
-                        <div class="client-stat-item">
-                            Budget Utilizzato: <span>${stats.usedBudget.toFixed(2)} €</span>
-                        </div>
-                    </div>
-                    <div class="progress-container">
-                        <div class="progress-bar" style="width: ${Math.min(stats.completionPercentage, 100)}%"></div>
-                    </div>
-                    <div class="project-list">
-                        <h4>Progetti</h4>
-                        ${clientProjects.map(project => {
-                            const projectActivities = activities.filter(a => a.projectId === project.id);
-                            const usedBudget = projectActivities.reduce((sum, a) => sum + a.actualCost, 0);
-                            const progress = (usedBudget / project.budget) * 100;
-                            
-                            return `
-                                <div class="project-item">
-                                    <div class="project-item-header">
-                                        <span>${project.name}</span>
-                                        <span>${project.budget.toFixed(2)} €</span>
-                                    </div>
-                                    <div class="progress-container">
-                                        <div class="progress-bar" style="width: ${Math.min(progress, 100)}%"></div>
-                                    </div>
-                                </div>
-                            `;
-                        }).join('') || '<p>Nessun progetto</p>'}
+        clientsList.innerHTML = clients.map(client => `
+            <div class="client-card">
+                <div class="client-header">
+                    <h3>${client.name}</h3>
+                    <div class="client-actions">
+                        <button onclick="editClient(${client.id})" class="btn btn-primary">Modifica</button>
+                        <button onclick="deleteClient(${client.id})" class="btn btn-danger">Elimina</button>
                     </div>
                 </div>
-            `;
-        }).join('');
+                <div class="client-budget">
+                    <div class="budget-total">Budget Totale: ${client.totalBudget.toFixed(2)} €</div>
+                    <div class="resources-list">
+                        <h4>Risorse Assegnate:</h4>
+                        ${client.resources.map(resource => `
+                            <div class="resource-item">
+                                ${resource.name}: ${resource.hours}h disponibili 
+                                (${resource.budget.toFixed(2)} €)
+                            </div>
+                        `).join('')}
+                    </div>
+                    <div class="budget-breakdown">
+                        <div>Bonus (5%): ${client.breakdown.bonusBudget.toFixed(2)} €</div>
+                        <div>Utile (25%): ${client.breakdown.profitBudget.toFixed(2)} €</div>
+                        <div>Struttura (25%): ${client.breakdown.structureBudget.toFixed(2)} €</div>
+                        <div>IGS (25%): ${client.breakdown.igsBudget.toFixed(2)} €</div>
+                    </div>
+                </div>
+            </div>
+        `).join('');
     }
 
+    // Inizializzazione
+    updateResourcesSelection();
+    updateBudgetCalculations();
     updateUI();
 
     // Esponi funzioni globali
