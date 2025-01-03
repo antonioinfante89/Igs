@@ -79,13 +79,13 @@ class ProjectManager {
  
     getClientAvailableBudget(clientId) {
         const client = this.clients.find(c => c.id === clientId);
-        if (!client) return 0;
- 
+        if (!client || !client.totalBudget) return 0;
+        
         const clientProjects = this.projects.filter(p => p.clientId === clientId);
         const usedBudget = clientProjects.reduce((sum, p) => sum + p.totalCost, 0);
-        
+      
         return client.totalBudget - usedBudget;
-    }
+      }
  
     getResourceAvailableHours(clientId, resourceId) {
         const client = this.clients.find(c => c.id === clientId);
