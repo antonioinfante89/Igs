@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestione Progetti - IGS</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="nav.css">
+</head>
+<body>
+    <nav class="nav">
+        <ul class="nav-list">
+            <li class="nav-item"><a href="index.html">Home</a></li>
+            <li class="nav-item"><a href="resources.html">Risorse</a></li>
+            <li class="nav-item"><a href="clients.html">Clienti</a></li>
+            <li class="nav-item"><a href="projects.html">Progetti</a></li>
+            <li class="nav-item"><a href="activities.html">Attività</a></li>
+        </ul>
+    </nav>
+
+    <div class="container">
+        <div class="header">
+            <h1>Gestione Progetti</h1>
+        </div>
+
+        <div class="dashboard-grid">
+            <!-- Form Nuovo Progetto -->
+            <div class="card">
+                <div class="card-header">
+                    <h2>Nuovo Progetto</h2>
+                </div>
+                <div class="card-body">
+                    <form id="projectForm" class="compact-form">
+                        <input type="hidden" name="projectId">
+                        
+                        <div class="form-group">
+                            <label>Cliente</label>
+                            <select class="form-control" name="clientId" required>
+                                <option value="">Seleziona Cliente</option>
+                            </select>
+                        </div>
+
+                        <div class="client-budget-info" style="display: none;">
+                            <div class="info-grid">
+                                <div class="info-item">
+                                    <label>Budget Totale Cliente</label>
+                                    <span id="totalBudget">0.00 €</span>
+                                </div>
+                                <div class="info-item">
+                                    <label>Budget Disponibile</label>
+                                    <span id="availableBudget">0.00 €</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Nome Progetto</label>
+                            <input type="text" class="form-control" name="projectName" required>
+                        </div>
+
+                        <div id="resourcesAllocation" class="resources-allocation" style="display: none;">
+                            <h3>Allocazione Risorse</h3>
+                            <div class="resources-grid">
+                                <!-- Popolato dinamicamente con le risorse del cliente -->
+                            </div>
+                        </div>
+
+                        <div class="project-summary" style="display: none;">
+                            <h3>Riepilogo Progetto</h3>
+                            <div class="summary-grid">
+                                <div class="summary-item">
+                                    <label>Ore Totali</label>
+                                    <span id="totalHours">0h</span>
+                                </div>
+                                <div class="summary-item">
+                                    <label>Costo Totale</label>
+                                    <span id="totalCost">0.00 €</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary" id="projectSubmitBtn">Crea Progetto</button>
+                            <button type="button" class="btn btn-secondary" id="projectCancelBtn" style="display: none;">Annulla</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Lista Progetti -->
+            <div class="card">
+                <div class="card-header">
+                    <h2>Progetti Attivi</h2>
+                </div>
+                <div class="card-body">
+                    <div class="projects-list" id="projectsList">
+                        <!-- Popolato dinamicamente -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="projects.js"></script>
+</body>
+</html>
