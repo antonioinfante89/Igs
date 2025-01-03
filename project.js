@@ -6,9 +6,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const projectForm = document.getElementById('projectForm');
     const clientSelect = projectForm.querySelector('[name="clientId"]');
     const resourcesAllocation = document.getElementById('resourcesAllocation');
-    
-    // Inizializza select clienti
+
     function initializeClientSelect() {
+        console.log('Clients:', clients); // Debug
         clientSelect.innerHTML = `
             <option value="">Seleziona Cliente</option>
             ${clients.map(client => `
@@ -57,7 +57,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const availableBudget = getClientAvailableBudget(clientId);
         document.getElementById('availableBudget').textContent = `${availableBudget.toFixed(2)} €`;
 
-        // Mostra risorse disponibili
         resourcesAllocation.style.display = 'block';
         const resourcesGrid = resourcesAllocation.querySelector('.resources-grid');
         resourcesGrid.innerHTML = client.resources.map(resource => {
@@ -90,11 +89,12 @@ document.addEventListener('DOMContentLoaded', () => {
             `;
         }).join('');
 
-        // Aggiungi event listeners per il calcolo dei costi
         const hourInputs = document.querySelectorAll('.resource-hours');
         hourInputs.forEach(input => {
             input.addEventListener('input', updateProjectSummary);
         });
+
+        updateProjectSummary();
     }
 
     function updateProjectSummary() {
@@ -110,7 +110,6 @@ document.addEventListener('DOMContentLoaded', () => {
             totalHours += hours;
             totalCost += cost;
 
-            // Aggiorna il costo mostrato per questa risorsa
             const costElement = input.closest('.resource-allocation-item')
                                    .querySelector('.resource-cost-value');
             costElement.textContent = `${cost.toFixed(2)} €`;
@@ -119,6 +118,60 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('totalHours').textContent = `${totalHours}h`;
         document.getElementById('totalCost').textContent = `${totalCost.toFixed(2)} €`;
         document.querySelector('.project-summary').style.display = 'block';
+    }
+
+    function renderResourcesChart() {
+        const ctx = document.getElementById('resourcesChart').getContext('2d');
+        const resourcesData = resources.map(resource => {
+            const totalHours = resource.workingDays * resource.hoursPerDay;
+            const allocatedHours = projects.reduce((sum, project) => {
+                const allocation = project.resources.find(r => r.id === resource.id);
+                return sum + (allocation ? allocation.hours : 0);
+            }, 0);
+
+            return {
+                name: resource.name,
+                totalHours,
+                allocatedHours,
+                availableHours: totalHours - allocatedHours
+            };
+        });
+
+        if (window.resourcesChart) {
+            window.resourcesChart.destroy();
+        }
+
+        window.resourcesChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: resourcesData.map(r => r.name),
+                datasets: [
+                    {
+                        label: 'Ore Allocate',
+                        data: resourcesData.map(r => r.allocatedHours),
+                        backgroundColor: 'rgba(54, 162, 235, 0.8)'
+                    },
+                    {
+                        label: 'Ore Disponibili',
+                        data: resourcesData.map(r => r.availableHours),
+                        backgroundColor: 'rgba(75, 192, 192, 0.8)'
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    x: { stacked: true },
+                    y: { 
+                        stacked: true,
+                        title: {
+                            display: true,
+                            text: 'Ore'
+                        }
+                    }
+                }
+            }
+        });
     }
 
     function resetForm() {
@@ -189,7 +242,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         updateClientInfo(project.clientId);
 
-        // Imposta le ore per ogni risorsa
         project.resources.forEach(allocation => {
             const input = projectForm.querySelector(`[name="resource_${allocation.id}_hours"]`);
             if (input) input.value = allocation.hours;
@@ -205,52 +257,9 @@ document.addEventListener('DOMContentLoaded', () => {
         projects = projects.filter(p => p.id !== id);
         localStorage.setItem('projects', JSON.stringify(projects));
         updateProjectsList();
-    }
-    function renderResourcesChart() {
-        const ctx = document.getElementById('resourcesChart').getContext('2d');
-        const resourcesData = resources.map(resource => {
-            const totalHours = resource.workingDays * resource.hoursPerDay;
-            const allocatedHours = projects.reduce((sum, project) => {
-                const allocation = project.resources.find(r => r.id === resource.id);
-                return sum + (allocation ? allocation.hours : 0);
-            }, 0);
-    
-            return {
-                name: resource.name,
-                totalHours,
-                allocatedHours,
-                availableHours: totalHours - allocatedHours
-            };
-        });
-    
-        new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: resourcesData.map(r => r.name),
-                datasets: [
-                    {
-                        label: 'Ore Allocate',
-                        data: resourcesData.map(r => r.allocatedHours),
-                        backgroundColor: 'rgba(54, 162, 235, 0.8)'
-                    },
-                    {
-                        label: 'Ore Disponibili',
-                        data: resourcesData.map(r => r.availableHours),
-                        backgroundColor: 'rgba(75, 192, 192, 0.8)'
-                    }
-                ]
-            },
-            options: {
-                responsive: true,
-                scales: {
-                    x: { stacked: true },
-                    y: { stacked: true }
-                }
-            }
-        });
+        renderResourcesChart();
     }
 
-    // Event Listeners
     clientSelect.addEventListener('change', () => {
         updateClientInfo(clientSelect.value);
     });
@@ -261,7 +270,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const clientId = parseInt(this.querySelector('[name="clientId"]').value);
         const availableBudget = getClientAvailableBudget(clientId);
         
-        // Raccogli i dati delle risorse
         const resourceInputs = document.querySelectorAll('.resource-hours');
         const projectResources = Array.from(resourceInputs)
             .map(input => {
@@ -309,20 +317,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
         localStorage.setItem('projects', JSON.stringify(projects));
         updateProjectsList();
+        renderResourcesChart();
         resetForm();
     });
 
     // Inizializzazione
-    function initializeClientSelect() {
-        const clients = JSON.parse(localStorage.getItem('clients')) || [];
-        clientSelect.innerHTML = `
-            <option value="">Seleziona Cliente</option>
-            ${clients.map(client => `
-                <option value="${client.id}">${client.name}</option>
-            `).join('')}
-        `;
-    }
+    initializeClientSelect();
     updateProjectsList();
+    renderResourcesChart();
 
     // Esponi funzioni globali
     window.editProject = editProject;

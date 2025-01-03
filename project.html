@@ -6,6 +6,7 @@
     <title>Gestione Progetti - IGS</title>
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="nav.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.0/chart.min.js"></script>
 </head>
 <body>
     <nav class="nav">
@@ -98,15 +99,22 @@
                     </div>
                 </div>
             </div>
-        </div>
-        <div class="card">
-            <div class="card-header">
-                <h2>Monte Ore Risorse</h2>
+
+            <!-- Grafico Monte Ore -->
+            <div class="card">
+                <div class="card-header">
+                    <h2>Monte Ore Risorse</h2>
+                </div>
+                <div class="card-body">
+                    <canvas id="resourcesChart"></canvas>
+                </div>
             </div>
-            <div class="card-body">
-                <canvas id="resourcesChart"></canvas>
-            </div>
         </div>
+    </div>
+
+    <script src="projects.js"></script>
+</body>
+</html>
     </div>
 
     <script src="projects.js"></script>
