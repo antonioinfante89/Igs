@@ -1,14 +1,23 @@
 document.addEventListener('DOMContentLoaded', () => {
-    let clients = JSON.parse(localStorage.getItem('clients')) || [];
-    let projects = JSON.parse(localStorage.getItem('projects')) || [];
-    let resources = JSON.parse(localStorage.getItem('resources')) || [];
+    let clients = [];
+    let projects = [];
+    let resources = [];
+
+    function loadData() {
+        clients = JSON.parse(localStorage.getItem('clients')) || [];
+        projects = JSON.parse(localStorage.getItem('projects')) || [];
+        resources = JSON.parse(localStorage.getItem('resources')) || [];
+        console.log('Clients loaded:', clients);
+        initializeClientSelect();
+        updateProjectsList();
+        renderResourcesChart();
+    }
 
     const projectForm = document.getElementById('projectForm');
     const clientSelect = projectForm.querySelector('[name="clientId"]');
     const resourcesAllocation = document.getElementById('resourcesAllocation');
 
     function initializeClientSelect() {
-        console.log('Clients:', clients); // Debug
         clientSelect.innerHTML = `
             <option value="">Seleziona Cliente</option>
             ${clients.map(client => `
@@ -322,9 +331,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Inizializzazione
-    initializeClientSelect();
-    updateProjectsList();
-    renderResourcesChart();
+    loadData();
 
     // Esponi funzioni globali
     window.editProject = editProject;
