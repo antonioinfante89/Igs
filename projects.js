@@ -7,25 +7,25 @@ class ProjectManager {
         this.projectForm = document.getElementById('projectForm');
         this.init();
     }
-
+ 
     init() {
         this.loadData();
         this.setupEventListeners();
         this.updateUI();
     }
-
+ 
     loadData() {
         this.clients = JSON.parse(localStorage.getItem('clients')) || [];
         this.projects = JSON.parse(localStorage.getItem('projects')) || [];
         this.resources = JSON.parse(localStorage.getItem('resources')) || [];
         console.log('Loaded clients:', this.clients);
     }
-
+ 
     saveData() {
         localStorage.setItem('projects', JSON.stringify(this.projects));
         this.updateUI();
     }
-
+ 
     setupEventListeners() {
         this.clientSelect.addEventListener('change', (e) => {
             const clientId = parseInt(e.target.value);
@@ -33,16 +33,27 @@ class ProjectManager {
                 this.updateClientInfo(clientId);
             }
         });
-
+ 
         this.projectForm.addEventListener('submit', (e) => this.handleProjectSubmit(e));
+        
+        document.addEventListener('click', (e) => {
+          if (e.target.classList.contains('edit-project')) {
+            const projectId = parseInt(e.target.dataset.projectId);
+            this.editProject(projectId);
+          } else if (e.target.classList.contains('delete-project')) {
+            const projectId = parseInt(e.target.dataset.projectId);
+            this.deleteProject(projectId);
+          }
+        });
     }
-
+ 
     updateUI() {
         this.populateClientSelect();
+        this.populateFilters();
         this.updateProjectsList();
         this.renderResourcesChart();
     }
-
+ 
     populateClientSelect() {
         this.clientSelect.innerHTML = `
             <option value="">Seleziona Cliente</option>
@@ -51,37 +62,51 @@ class ProjectManager {
             ).join('')}
         `;
     }
-
+ 
+    populateFilters() {
+        const clientFilter = document.getElementById('clientFilter');
+        const resourceFilter = document.getElementById('resourceFilter');
+ 
+        clientFilter.innerHTML = `<option value="">Tutti i Clienti</option>` + 
+            this.clients.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+        
+        resourceFilter.innerHTML = `<option value="">Tutte le Risorse</option>` +
+            this.resources.map(r => `<option value="${r.id}">${r.name}</option>`).join('');
+ 
+        clientFilter.addEventListener('change', () => this.updateProjectsList());  
+        resourceFilter.addEventListener('change', () => this.updateProjectsList());
+    }
+ 
     getClientAvailableBudget(clientId) {
         const client = this.clients.find(c => c.id === clientId);
         if (!client) return 0;
-
+ 
         const clientProjects = this.projects.filter(p => p.clientId === clientId);
         const usedBudget = clientProjects.reduce((sum, p) => sum + p.totalCost, 0);
         
         return client.totalBudget - usedBudget;
     }
-
+ 
     getResourceAvailableHours(clientId, resourceId) {
         const client = this.clients.find(c => c.id === clientId);
         if (!client) return 0;
-
+ 
         const resourceData = client.resources.find(r => r.id === resourceId);
         if (!resourceData) return 0;
-
+ 
         const clientProjects = this.projects.filter(p => p.clientId === clientId);
         const usedHours = clientProjects.reduce((sum, project) => {
             const allocation = project.resources.find(r => r.id === resourceId);
             return sum + (allocation ? allocation.hours : 0);
         }, 0);
-
+ 
         return resourceData.hours - usedHours;
     }
-
+ 
     updateClientInfo(clientId) {
         const client = this.clients.find(c => c.id === clientId);
         if (!client) return;
-
+ 
         document.querySelector('.client-budget-info').style.display = 'block';
         document.getElementById('totalBudget').textContent = 
             `${client.totalBudget.toFixed(2)} €`;
@@ -89,10 +114,10 @@ class ProjectManager {
         const availableBudget = this.getClientAvailableBudget(clientId);
         document.getElementById('availableBudget').textContent = 
             `${availableBudget.toFixed(2)} €`;
-
+ 
         this.updateResourcesAllocation(client);
     }
-
+ 
     updateResourcesAllocation(client) {
         const container = document.getElementById('resourcesAllocation');
         container.style.display = 'block';
@@ -127,20 +152,20 @@ class ProjectManager {
                 </div>
             `;
         }).join('');
-
+ 
         const hourInputs = document.querySelectorAll('.resource-hours');
         hourInputs.forEach(input => {
             input.addEventListener('input', () => this.updateProjectSummary());
         });
-
+ 
         this.updateProjectSummary();
     }
-
+ 
     updateProjectSummary() {
         const inputs = document.querySelectorAll('.resource-hours');
         let totalHours = 0;
         let totalCost = 0;
-
+ 
         inputs.forEach(input => {
             const hours = parseFloat(input.value) || 0;
             const hourlyRate = parseFloat(input.dataset.hourlyRate);
@@ -148,31 +173,28 @@ class ProjectManager {
             
             totalHours += hours;
             totalCost += cost;
-
+ 
             const costElement = input.closest('.resource-allocation-item')
                                    .querySelector('.resource-cost-value');
             costElement.textContent = `${cost.toFixed(2)} €`;
         });
-
+ 
         document.getElementById('totalHours').textContent = `${totalHours}h`;
         document.getElementById('totalCost').textContent = `${totalCost.toFixed(2)} €`;
         document.querySelector('.project-summary').style.display = 'block';
     }
-
+ 
     renderResourcesChart() {
         const ctx = document.getElementById('resourcesChart');
         if (!ctx) return;
-    
-        if (window.resourcesChart && typeof window.resourcesChart.destroy === 'function') {
-            window.resourcesChart.destroy();
-        }
+ 
         const resourcesData = this.resources.map(resource => {
             const totalHours = resource.workingDays * resource.hoursPerDay;
             const allocatedHours = this.projects.reduce((sum, project) => {
                 const allocation = project.resources.find(r => r.id === resource.id);
                 return sum + (allocation ? allocation.hours : 0);
             }, 0);
-
+ 
             return {
                 name: resource.name,
                 totalHours,
@@ -180,12 +202,8 @@ class ProjectManager {
                 availableHours: totalHours - allocatedHours
             };
         });
-
-        if (window.resourcesChart) {
-            window.resourcesChart.destroy();
-        }
-
-        window.resourcesChart = new Chart(ctx, {
+ 
+        new Chart(ctx, {
             type: 'bar',
             data: {
                 labels: resourcesData.map(r => r.name),
@@ -217,7 +235,7 @@ class ProjectManager {
             }
         });
     }
-
+ 
     handleProjectSubmit(e) {
         e.preventDefault();
         const form = e.target;
@@ -239,7 +257,7 @@ class ProjectManager {
             .map(input => {
                 const hours = parseFloat(input.value) || 0;
                 if (hours === 0) return null;
-
+ 
                 const resourceId = parseInt(input.dataset.resourceId);
                 const hourlyRate = parseFloat(input.dataset.hourlyRate);
                 return {
@@ -249,20 +267,22 @@ class ProjectManager {
                 };
             })
             .filter(r => r !== null);
-
+ 
         if (projectResources.length === 0) {
             alert('Devi allocare almeno una risorsa al progetto');
             return;
         }
-
+ 
         const totalCost = projectResources.reduce((sum, r) => sum + r.cost, 0);
         const projectId = form.querySelector('[name="projectId"]').value;
-
+ 
+        const availableBudget = this.getClientAvailableBudget(clientId);
+ 
         if (!projectId && totalCost > availableBudget) {
             alert('Il costo totale del progetto supera il budget disponibile del cliente');
             return;
         }
-
+ 
         const project = {
             id: projectId ? parseInt(projectId) : Date.now(),
             clientId,
@@ -272,7 +292,7 @@ class ProjectManager {
             totalHours: projectResources.reduce((sum, r) => sum + r.hours, 0),
             createdAt: new Date().toISOString()
         };
-
+ 
         if (projectId) {
             this.projects = this.projects.map(p => 
                 p.id === parseInt(projectId) ? project : p
@@ -280,11 +300,11 @@ class ProjectManager {
         } else {
             this.projects.push(project);
         }
-
+ 
         this.saveData();
         this.resetForm();
     }
-
+ 
     resetForm() {
         this.projectForm.reset();
         this.projectForm.querySelector('[name="projectId"]').value = '';
@@ -292,10 +312,17 @@ class ProjectManager {
         document.getElementById('resourcesAllocation').style.display = 'none';
         document.querySelector('.project-summary').style.display = 'none';
     }
-
+ 
     updateProjectsList() {
         const projectsList = document.getElementById('projectsList');
-        projectsList.innerHTML = this.projects.map(project => {
+        const clientFilter = document.getElementById('clientFilter').value;
+        const resourceFilter = document.getElementById('resourceFilter').value;
+ 
+        const filteredProjects = this.projects
+            .filter(p => !clientFilter || p.clientId === parseInt(clientFilter))
+            .filter(p => !resourceFilter || p.resources.some(r => r.id === parseInt(resourceFilter)));
+        
+        projectsList.innerHTML = filteredProjects.map(project => {
             const client = this.clients.find(c => c.id === project.clientId);
             const progress = (project.totalCost / client.totalBudget) * 100;
             
@@ -307,15 +334,15 @@ class ProjectManager {
                             <p class="client-name">Cliente: ${client.name}</p>
                         </div>
                         <div class="project-actions">
-                            <button onclick="projectManager.editProject(${project.id})" class="btn btn-primary btn-sm">
+                            <button class="btn btn-primary btn-sm edit-project" data-project-id="${project.id}">
                                 Modifica
                             </button>
-                            <button onclick="projectManager.deleteProject(${project.id})" class="btn btn-danger btn-sm">
+                            <button class="btn btn-danger btn-sm delete-project" data-project-id="${project.id}">
                                 Elimina
                             </button>
                         </div>
                     </div>
-
+ 
                     <div class="project-resources">
                         <h4>Risorse Allocate:</h4>
                         ${project.resources.map(allocation => {
@@ -328,7 +355,7 @@ class ProjectManager {
                             `;
                         }).join('')}
                     </div>
-
+ 
                     <div class="project-budget">
                         <div class="budget-details">
                             <p>Ore Totali: ${project.totalHours}h</p>
@@ -342,42 +369,40 @@ class ProjectManager {
             `;
         }).join('');
     }
-
+ 
     formatCurrency(amount) {
         return `${amount.toFixed(2)} €`;
     }
-
+ 
     editProject(id) {
         const project = this.projects.find(p => p.id === id);
         if (!project) return;
-
+ 
         this.projectForm.querySelector('[name="projectId"]').value = project.id;
         this.projectForm.querySelector('[name="clientId"]').value = project.clientId;
         this.projectForm.querySelector('[name="projectName"]').value = project.name;
-
+ 
         this.updateClientInfo(project.clientId);
-
+ 
         project.resources.forEach(allocation => {
             const input = this.projectForm.querySelector(
                 `[name="resource_${allocation.id}_hours"]`
             );
             if (input) input.value = allocation.hours;
         });
-
+ 
         this.updateProjectSummary();
         document.querySelector('.project-summary').style.display = 'block';
     }
-
+ 
     deleteProject(id) {
         if (!confirm('Sei sicuro di voler eliminare questo progetto?')) return;
         
         this.projects = this.projects.filter(p => p.id !== id);
         this.saveData();
     }
-}
-
-// Inizializzazione
-const projectManager = new ProjectManager();
-
-// Esponi funzioni globali
-window.projectManager = projectManager;
+ }
+ 
+ const projectManager = new ProjectManager();
+ 
+ window.projectManager = projectManager;

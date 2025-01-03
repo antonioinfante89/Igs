@@ -25,7 +25,6 @@
         </div>
 
         <div class="dashboard-grid">
-            <!-- Form Nuovo Progetto -->
             <div class="card">
                 <div class="card-header">
                     <h2>Nuovo Progetto</h2>
@@ -62,7 +61,6 @@
                         <div id="resourcesAllocation" class="resources-allocation" style="display: none;">
                             <h3>Allocazione Risorse</h3>
                             <div class="resources-grid">
-                                <!-- Popolato dinamicamente con le risorse del cliente -->
                             </div>
                         </div>
 
@@ -88,19 +86,24 @@
                 </div>
             </div>
 
-            <!-- Lista Progetti -->
             <div class="card">
                 <div class="card-header">
                     <h2>Progetti Attivi</h2>
-                </div>
-                <div class="card-body">
-                    <div class="projects-list" id="projectsList">
-                        <!-- Popolato dinamicamente -->
+                    <div class="filters">
+                        <select id="clientFilter">
+                            <option value="">Tutti i Clienti</option>
+                        </select>
+                        <select id="resourceFilter">
+                            <option value="">Tutte le Risorse</option>  
+                        </select>
                     </div>
                 </div>
+                <div class="card-body">
+                    <div class="projects-list" id="projectsList"></div>
+                </div>
+            </div>
             </div>
 
-            <!-- Grafico Monte Ore -->
             <div class="card">
                 <div class="card-header">
                     <h2>Monte Ore Risorse</h2>
@@ -110,11 +113,6 @@
                 </div>
             </div>
         </div>
-    </div>
-
-    <script src="projects.js"></script>
-</body>
-</html>
     </div>
 
     <script src="projects.js"></script>
