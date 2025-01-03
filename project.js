@@ -270,7 +270,15 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Inizializzazione
-    initializeClientSelect();
+    function initializeClientSelect() {
+        const clients = JSON.parse(localStorage.getItem('clients')) || [];
+        clientSelect.innerHTML = `
+            <option value="">Seleziona Cliente</option>
+            ${clients.map(client => `
+                <option value="${client.id}">${client.name}</option>
+            `).join('')}
+        `;
+    }
     updateProjectsList();
 
     // Esponi funzioni globali
